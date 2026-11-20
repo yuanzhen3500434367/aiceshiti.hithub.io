@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>错线司 · 十幕红线劫</title>
+<style>
+  :root{
+    --paper:#F6F1E7;         /* 宣纸底 */
+    --card:#FBF7EE;          /* 卡片纸 */
+    --ink:#2B2B2B;           /* 深墨 */
+    --ink-light:#8A8175;     /* 浅墨 */
+    --cinnabar:#B23A2E;      /* 朱砂 */
+    --seal:#A93226;          /* 选中印泥 */
+    --teal:#3E5C5A;          /* 黛青 */
+    --gold:#C9A45C;          /* 暗金 */
+    --serif:"Source Han Serif SC","Noto Serif SC","思源宋体","Songti SC","STSong","SimSun","宋体",serif;
+    --kai:"LXGW WenKai","霞鹜文楷","Kaiti SC","STKaiti","KaiTi","楷体",cursive;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(201,164,92,.10), transparent 60%),
+      var(--paper);
+    color:var(--ink);
+    font-family:var(--serif);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  .stage{
+    position:relative;
+    max-width:680px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:24px 22px 56px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* 转场：墨晕 + 红线 */
+  .ink{
+    position:fixed; inset:0; pointer-events:none; z-index:80;
+    opacity:0;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(43,43,43,.0) 0%, rgba(43,43,43,.05) 40%, rgba(43,43,43,.28) 100%);
+  }
+  .ink.run{ animation:inkfade .45s ease forwards; }
+  @keyframes inkfade{
+    0%{ opacity:0; transform:scale(.96); }
+    45%{ opacity:1; }
+    100%{ opacity:0; transform:scale(1.04); }
+  }
+  .redline{
+    position:fixed; left:-40%; bottom:18%; width:70%; height:2px; z-index:81;
+    background:linear-gradient(90deg, transparent, var(--cinnabar));
+    transform:translateX(0) rotate(-8deg); opacity:0; pointer-events:none;
+  }
+  .redline.run{ animation:sweep .45s ease forwards; }
+  @keyframes sweep{
+    0%{ opacity:0; transform:translateX(0) rotate(-8deg); }
+    25%{ opacity:.9; }
+    100%{ opacity:0; transform:translateX(90vw) rotate(-8deg); }
+  }
+
+  .page{ display:none; flex-direction:column; }
+  .page.active{ display:flex; animation:pagein .45s ease both; }
+  @keyframes pagein{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* 顶部小工具条 */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    color:var(--ink-light); font-size:13px; margin-bottom:8px;
+  }
+  .sound-toggle{
+    border:1px solid rgba(138,129,117,.45); background:transparent;
+    color:var(--ink-light); font-family:var(--serif); font-size:12px;
+    padding:4px 10px; border-radius:999px; cursor:pointer; letter-spacing:.05em;
+  }
+  .sound-toggle.on{ color:var(--cinnabar); border-color:var(--cinnabar); }
+
+  /* 封面 */
+  .cover{ align-items:center; text-align:center; padding-top:28px; }
+  .cover-art{ position:relative; width:230px; height:230px; margin-bottom:6px; }
+  .moon{
+    position:absolute; inset:14px; border-radius:50%;
+    background:radial-gradient(circle at 38% 34%, #f3e7ca 0%, #e9d6aa 42%, #d9c086 70%, rgba(217,192,134,.35) 100%);
+    box-shadow:0 0 40px rgba(201,164,92,.35), inset 0 0 18px rgba(201,164,92,.4);
+    opacity:.92;
+  }
+  .plaque{
+    position:absolute; right:20px; top:64px; width:64px; padding:8px 0 7px;
+    background:var(--card); border:1.5px solid var(--ink);
+    border-radius:3px; font-family:var(--kai); font-size:15px; letter-spacing:.12em;
+    box-shadow:0 3px 0 rgba(43,43,43,.18);
+    transform:rotate(4deg);
+  }
+  .cover h1{
+    font-size:40px; letter-spacing:.28em; margin:14px 0 4px; text-indent:.28em;
+    font-weight:600; color:var(--ink);
+  }
+  .cover .sub{
+    font-size:19px; letter-spacing:.18em; margin:0 0 10px; color:var(--cinnabar);
+    font-family:var(--kai); text-indent:.18em;
+  }
+  .cover .tagline{ font-size:16px; color:var(--ink); margin:2px 0; }
+  .cover .hook{ font-size:14px; color:var(--ink-light); margin:10px 0 26px; letter-spacing:.06em; }
+  .cover .disclaimer{
+    font-size:11.5px; color:var(--ink-light); opacity:.75; margin-top:14px; letter-spacing:.04em;
+  }
+
+  /* 按钮 */
+  .btn{
+    display:inline-block; cursor:pointer; border:none; font-family:var(--kai);
+    letter-spacing:.08em; text-align:center; transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .btn-primary{
+    min-width:210px; padding:15px 34px; font-size:18px;
+    color:#fff; background:var(--cinnabar); border-radius:4px;
+    animation:breathe 2.8s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{ transform:translateY(0); box-shadow:0 6px 18px rgba(178,58,46,.18); }
+    50%{ transform:translateY(-3px); box-shadow:0 10px 24px rgba(178,58,46,.26); }
+  }
+  .btn-primary:hover{ transform:translateY(-4px) scale(1.02); }
+  .btn-primary:active{ transform:translateY(0) scale(.98); }
+  .btn-ghost{
+    background:transparent; color:var(--ink-light); border:1px solid rgba(138,129,117,.5);
+    padding:11px 24px; font-size:14px; border-radius:4px; margin-top:16px;
+  }
+  .btn-ghost:hover{ border-color:var(--cinnabar); color:var(--cinnabar); }
+
+  /* 须知 */
+  .notice .scroll-title{
+    font-size:24px; letter-spacing:.16em; font-weight:600; margin:8px 0 18px; color:var(--ink);
+  }
+  .notice-card{
+    background:var(--card); border:1px solid rgba(138,129,117,.28);
+    border-radius:6px; padding:20px 20px 10px; position:relative;
+    box-shadow:0 2px 12px rgba(43,43,43,.05);
+  }
+  .notice-card .roll{
+    position:absolute; top:-7px; left:0; right:0; height:14px; margin:0 24px;
+    border:1px solid rgba(138,129,117,.35); border-radius:8px; background:var(--paper);
+  }
+  .notice-item{
+    display:flex; gap:12px; padding:12px 0; border-bottom:1px dashed rgba(138,129,117,.3);
+    font-size:15.5px; line-height:1.8; color:var(--ink);
+  }
+  .notice-item:last-child{ border-bottom:none; }
+  .notice-item .no{
+    flex:none; width:26px; height:26px; border-radius:50%;
+    border:1px solid var(--cinnabar); color:var(--cinnabar);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; margin-top:2px; font-family:var(--kai);
+  }
+  .notice-cta{ display:flex; flex-direction:column; align-items:center; margin-top:26px; }
+
+  /* 进度十盏灯 */
+  .lanterns{
+    display:flex; justify-content:center; gap:9px; margin:4px 0 20px;
+  }
+  .lamp{
+    width:14px; height:14px; border-radius:50%;
+    border:1.5px solid rgba(138,129,117,.55); background:transparent;
+    position:relative; transition:all .3s ease;
+  }
+  .lamp.done{ background:var(--cinnabar); border-color:var(--cinnabar); box-shadow:0 0 8px rgba(178,58,46,.45); }
+  .lamp.now{ border-color:var(--cinnabar); box-shadow:0 0 0 3px rgba(178,58,46,.15); }
+
+  /* 题目 */
+  .question .scene-no{
+    font-family:var(--kai); color:var(--cinnabar); font-size:15px;
+    letter-spacing:.16em; margin:0 0 4px;
+  }
+  .question .scene{ font-size:15px; color:var(--ink-light); line-height:1.85; margin:0 0 6px; }
+  .question .ask{ font-size:18px; font-weight:600; line-height:1.7; margin:0 0 20px; color:var(--ink); }
+  .options{ display:flex; flex-direction:column; gap:14px; }
+  .option{
+    position:relative; text-align:left; cursor:pointer;
+    background:var(--card); border:1px solid rgba(138,129,117,.32);
+    border-left:3px solid var(--cinnabar); border-radius:5px;
+    padding:15px 16px 15px 15px; font-family:var(--serif); font-size:15.5px; line-height:1.75;
+    color:var(--ink); transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    box-shadow:0 1px 6px rgba(43,43,43,.05);
+  }
+  .option .tag{
+    font-family:var(--kai); color:var(--cinnabar); font-weight:600; margin-right:9px;
+  }
+  .option:hover{ transform:translateX(2px); border-color:var(--cinnabar); }
+  .option:active{ transform:translateY(0) scale(.99); }
+  .option.selected{
+    transform:translateY(2px); border-color:var(--seal);
+    box-shadow:0 3px 12px rgba(169,50,38,.16);
+  }
+  .option .seal{
+    position:absolute; top:-11px; right:-11px; width:36px; height:36px;
+    border:2px solid var(--seal); color:var(--seal); border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--kai); font-size:20px; background:var(--card);
+    transform:scale(0); transition:transform .2s cubic-bezier(.2,1.6,.4,1);
+  }
+  .option.selected .seal{ transform:scale(1) rotate(-6deg); }
+  .q-foot{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:24px; color:var(--ink-light); font-size:13px;
+  }
+  .back-link{
+    cursor:pointer; color:var(--ink-light); background:none; border:none;
+    font-family:var(--serif); font-size:13px; letter-spacing:.05em;
+  }
+  .back-link:hover{ color:var(--cinnabar); }
+
+  /* 解线中 */
+  .loading{ align-items:center; justify-content:center; text-align:center; min-height:72vh; }
+  .knot-wrap{ width:120px; height:120px; margin-bottom:26px; position:relative; }
+  .knot-ring{
+    position:absolute; inset:0; border-radius:50%;
+    border:1.5px solid rgba(178,58,46,.25);
+  }
+  .knot-ring::after{
+    content:""; position:absolute; inset:12px; border-radius:50%;
+    border:1.5px solid rgba(178,58,46,.45); border-top-color:transparent;
+    animation:spin 2.4s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .loading h2{ font-size:24px; letter-spacing:.14em; font-weight:600; margin:0 0 8px; }
+  .loading .line-rotor{
+    font-family:var(--kai); font-size:15px; color:var(--ink-light);
+    min-height:28px; margin:14px 0 0; line-height:1.9;
+  }
+  .dots span{
+    display:inline-block; width:7px; height:7px; border-radius:50%;
+    background:var(--ink-light); margin:0 4px; animation:pulse 1.2s ease-in-out infinite;
+  }
+  .dots span:nth-child(2){ animation-delay:.2s; }
+  .dots span:nth-child(3){ animation-delay:.4s; }
+  @keyframes pulse{ 0%,100%{ opacity:.25; transform:scale(.8);} 50%{ opacity:1; transform:scale(1.15);} }
+
+  /* 结果 */
+  .result{ padding-top:4px; }
+  .verdict-scroll{
+    background:var(--card); border:1px solid rgba(138,129,117,.3);
+    border-radius:6px; padding:24px 22px; position:relative;
+    box-shadow:0 3px 18px rgba(43,43,43,.07);
+  }
+  .verdict-scroll::before,.verdict-scroll::after{
+    content:""; position:absolute; left:50%; transform:translateX(-50%);
+    width:34px; height:12px; border:1px solid rgba(138,129,117,.4); border-radius:8px;
+    background:var(--paper);
+  }
+  .verdict-scroll::before{ top:-7px; }
+  .verdict-scroll::after{ bottom:-7px; }
+  .result .kicker{
+    font-family:var(--kai); color:var(--cinnabar); font-size:15px;
+    letter-spacing:.16em; text-align:center; margin-bottom:14px;
+  }
+  .result .draw{
+    text-align:center; font-size:16px; color:var(--ink); margin:0 0 6px;
+  }
+  .result .line-name{
+    font-size:30px; font-weight:600; letter-spacing:.08em;
+    text-align:center; margin:2px 0 18px; color:var(--ink);
+  }
+  .type-motif{ display:block; margin:10px auto 16px; }
+  .verdict-lines{
+    border-top:1px solid rgba(138,129,117,.25); border-bottom:1px solid rgba(138,129,117,.25);
+    padding:14px 2px; margin-bottom:16px;
+  }
+  .verdict-lines p{
+    margin:0; padding:5px 0; font-size:15.5px; line-height:1.9; color:var(--ink);
+    text-align:justify; text-justify:inter-ideograph;
+  }
+  .verdict-lines p:first-child{ font-size:17px; font-weight:600; }
+  .sub-line{
+    background:rgba(62,92,90,.07); border-left:3px solid var(--teal);
+    border-radius:4px; padding:12px 14px; margin:12px 0 16px;
+    font-size:14.5px; line-height:1.85; color:var(--ink);
+  }
+  .coord{
+    display:flex; flex-direction:column; gap:10px; margin:4px 0 16px;
+  }
+  .coord .row{ display:flex; gap:12px; align-items:baseline; }
+  .coord .key{
+    flex:none; font-family:var(--kai); color:var(--cinnabar); font-size:14px;
+    min-width:52px; letter-spacing:.08em;
+  }
+  .coord .val{ font-size:14.5px; line-height:1.75; color:var(--ink); }
+  .grid-box{
+    border:1px solid rgba(201,164,92,.65); background:rgba(201,164,92,.08);
+    border-radius:5px; padding:12px 14px; margin:0 0 16px;
+  }
+  .grid-box .label{ font-family:var(--kai); font-size:13px; color:var(--gold); letter-spacing:.1em; }
+  .grid-box .name{ font-size:17px; font-weight:600; margin-top:4px; color:var(--ink); }
+  .mirror{
+    display:flex; gap:12px; align-items:center; margin:0 0 18px;
+    font-size:15px; color:var(--ink);
+  }
+  .mirror .label{ font-family:var(--kai); color:var(--teal); flex:none; }
+  .advice{
+    border-top:1px dashed rgba(138,129,117,.4); padding-top:14px;
+    font-size:15px; line-height:1.85; color:var(--ink);
+  }
+  .advice .label{ font-family:var(--kai); color:var(--cinnabar); margin-right:6px; }
+  .result-cta{ display:flex; flex-direction:column; align-items:center; margin-top:24px; gap:4px; }
+  .result .disclaimer{
+    font-size:11.5px; color:var(--ink-light); opacity:.75; text-align:center;
+    margin-top:18px; letter-spacing:.04em; line-height:1.7;
+  }
+
+  /* 分享卡 */
+  .share{ align-items:center; padding-top:12px; }
+  .share-card{
+    width:100%; max-width:400px; background:var(--card);
+    border:2px solid var(--cinnabar); border-radius:8px;
+    padding:26px 24px 20px; position:relative; text-align:center;
+    box-shadow:0 6px 24px rgba(43,43,43,.12);
+  }
+  .share-card .corner-seal{
+    position:absolute; top:-12px; right:-12px; width:44px; height:44px;
+    border:2px solid var(--seal); color:var(--seal); border-radius:5px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--kai); font-size:24px; background:var(--card);
+    transform:rotate(6deg);
+  }
+  .share-card .stitle{ font-family:var(--kai); color:var(--ink-light); font-size:14px; letter-spacing:.12em; }
+  .share-card .sline{ font-size:27px; font-weight:600; margin:8px 0 14px; letter-spacing:.06em; }
+  .share-card .srow{
+    display:flex; justify-content:center; gap:8px; align-items:baseline;
+    font-size:14px; color:var(--ink); margin:6px 0;
+  }
+  .share-card .srow .k{ font-family:var(--kai); color:var(--ink-light); flex:none; }
+  .share-card .squote{
+    font-size:13.5px; line-height:1.8; color:var(--ink-light); margin:14px 0 4px;
+    text-align:justify; text-justify:inter-ideograph;
+  }
+  .share-card .sfoot{
+    margin-top:14px; padding-top:12px; border-top:1px dashed rgba(138,129,117,.4);
+    font-size:11.5px; color:var(--ink-light); letter-spacing:.04em;
+  }
+  .share-cta{ display:flex; flex-direction:column; align-items:center; margin-top:22px; }
+  .row-btns{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+  @media (max-width:380px){
+    .cover h1{ font-size:32px; }
+    .option{ font-size:14.5px; }
+    .result .line-name{ font-size:25px; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="ink" id="ink"></div>
+  <div class="redline" id="redline"></div>
+
+  <!-- 封面 -->
+  <section class="page active" id="page-cover">
+    <div class="topbar">
+      <span>错线司 · 十幕红线劫</span>
+      <button class="sound-toggle" id="soundToggle" aria-pressed="false">音效 · 关</button>
+    </div>
+    <div class="cover">
+      <div class="cover-art">
+        <div class="moon"></div>
+        <svg class="knots" viewBox="0 0 230 230" width="230" height="230" aria-hidden="true">
+          <path d="M30 150 C65 95, 100 90, 115 125 C128 156, 158 150, 198 108"
+            fill="none" stroke="#B23A2E" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="92" cy="116" r="7" fill="none" stroke="#B23A2E" stroke-width="2"/>
+          <path d="M85 112 q7 7 0 14 M99 112 q-7 7 0 14" fill="none" stroke="#B23A2E" stroke-width="1.8"/>
+          <circle cx="140" cy="136" r="7" fill="none" stroke="#B23A2E" stroke-width="2"/>
+          <path d="M133 132 q7 7 0 14 M147 132 q-7 7 0 14" fill="none" stroke="#B23A2E" stroke-width="1.8"/>
+          <circle cx="178" cy="110" r="7" fill="none" stroke="#B23A2E" stroke-width="2"/>
+          <path d="M171 106 q7 7 0 14 M185 106 q-7 7 0 14" fill="none" stroke="#B23A2E" stroke-width="1.8"/>
+        </svg>
+        <div class="plaque">错线司</div>
+      </div>
+      <h1>错线司</h1>
+      <p class="sub">十幕红线劫</p>
+      <p class="tagline">测一测你最容易被哪种孽缘缠住</p>
+      <p class="hook">一炷香，十幕旧缘。凭第一反应落笔。</p>
+      <button class="btn btn-primary" id="btnStart">入司问线</button>
+      <p class="disclaimer">娱乐化自我探索，非心理诊断</p>
+    </div>
+  </section>
+
+  <!-- 问线须知 -->
+  <section class="page" id="page-notice">
+    <div class="topbar">
+      <span>问线须知</span>
+      <button class="sound-toggle" id="soundToggle2" aria-pressed="false">音效 · 关</button>
+    </div>
+    <div class="notice">
+      <h2 class="scroll-title">问线须知</h2>
+      <div class="notice-card">
+        <div class="roll"></div>
+        <div class="notice-item"><span class="no">一</span><span>没有好缘坏缘，只有你容易反复走入的结构。</span></div>
+        <div class="notice-item"><span class="no">二</span><span>每题选最像你的一个，不必选“应该”。</span></div>
+        <div class="notice-item"><span class="no">三</span><span>十幕走完，月老会给你主型、副型与一线判词。</span></div>
+        <div class="notice-item"><span class="no">四</span><span>本测试仅供自我探索，不替代专业咨询。</span></div>
+      </div>
+      <div class="notice-cta">
+        <button class="btn btn-primary" id="btnBegin">开始问线</button>
+        <button class="btn btn-ghost" id="btnBackCover">返回封面</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 题目 -->
+  <section class="page" id="page-question">
+    <div class="lanterns" id="lanterns"></div>
+    <div class="question" id="question"></div>
+    <div class="q-foot">
+      <button class="back-link" id="btnPrev">‹ 上一幕</button>
+      <span id="qCount">第 1 / 10 幕</span>
+    </div>
+  </section>
+
+  <!-- 解线中 -->
+  <section class="page" id="page-loading">
+    <div class="loading">
+      <div class="knot-wrap"><div class="knot-ring"></div></div>
+      <h2>月老正在解线……</h2>
+      <div class="dots"><span></span><span></span><span></span></div>
+      <p class="line-rotor" id="lineRotor">第一结：你如何靠近一个人。</p>
+    </div>
+  </section>
+
+  <!-- 结果 -->
+  <section class="page" id="page-result">
+    <div class="result" id="result"></div>
+  </section>
+
+  <!-- 分享卡 -->
+  <section class="page" id="page-share">
+    <div class="share">
+      <div class="share-card" id="shareCard">
+        <div class="corner-seal">缘</div>
+        <div class="stitle">我的错线判词</div>
+        <div class="sline" id="shareLine"></div>
+        <div class="srow"><span class="k">坐标</span><span id="shareCoord"></span></div>
+        <div class="srow"><span class="k">文学镜像</span><span id="shareMirror"></span></div>
+        <div class="squote" id="shareQuote"></div>
+        <div class="sfoot">错线司 · 十幕红线劫｜娱乐化自我探索</div>
+      </div>
+      <div class="share-cta">
+        <div class="row-btns">
+          <button class="btn btn-primary" id="btnSave" style="min-width:160px;padding:13px 26px;font-size:15px;">保存判词</button>
+          <button class="btn btn-ghost" id="btnRestart2" style="margin-top:0;">再问一次</button>
+        </div>
+        <button class="btn btn-ghost" id="btnBackResult">返回判词</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ---------- 数据 ---------- */
+const TYPES = {
+  R:{ key:"R", name:"互相救赎型", line:"以泪还债线",
+      verdict:"你擅长看见别人的伤，也容易把“被需要”当成爱。你总想成为那个懂他、救他的人，却忘了自己也会被拖入旧伤。",
+      mirror:"林黛玉与贾宝玉",
+      advice:"先分清共情与拯救；帮助别人前，确认自己没有“只有我能救他”吸引。" },
+  A:{ key:"A", name:"互相成瘾型", line:"烈火烹油线",
+      verdict:"你爱的是强烈、秘密、忽近忽远带来的眩晕。平淡让你恐慌，甜头让你回头，明知消耗仍难戒断。",
+      mirror:"潘金莲与西门庆",
+      advice:"识别间歇强化和戒断感；重大决定至少隔一夜再做。" },
+  D:{ key:"D", name:"强依恋＋强防御", line:"追影逐月线",
+      verdict:"你越怕失去，越用试探、追问、查证来确认爱；对方越退，你越追。你想要承诺，却常用防御把人推远。",
+      mirror:"崔莺莺与张生",
+      advice:"表达需求而不是测试对方；练习自我安抚，给彼此可退的空间。" },
+  C:{ key:"C", name:"反差吸引型", line:"冰炭同炉线",
+      verdict:"你被与自己完全不同的人吸引，像另一种人生、另一种火。冲突让你眩晕，差异让你上头，但适配度常被忽略。",
+      mirror:"王熙凤与贾琏",
+      advice:"区分新鲜感与适配度；把现实差异摆上桌协商，而不是靠冲突证明爱。" },
+  P:{ key:"P", name:"投射纠缠型", line:"镜花水月线",
+      verdict:"你爱上的常是心中影像：理想父母、理想自我、旧日遗憾。你越想把对方改成那个样子，越看不清真实的他。",
+      mirror:"洛神与曹植",
+      advice:"收回理想化投影；用真实信息验证对方，允许他和你想象不同。" },
+  B:{ key:"B", name:"互相补偿型", line:"榫卯共生线",
+      verdict:"你们像拼图：一个负责现实，一个负责情绪；一个给稳定，一个给温度。缺一块就散，合太久又容易共生。",
+      mirror:"薛宝钗与贾宝玉",
+      advice:"把隐性契约说清；允许公平交换，而不是“没你我不完整”。" }
+};
+
+const QUESTIONS = [
+  { no:"第一幕 · 上元灯会",
+    scene:"上元夜，洛州灯市人声如潮。你被醉汉纠缠，一个青衫男子替你挡开。他袖口有药香，左眉一道旧疤。",
+    ask:"你最先被什么击中？",
+    options:[
+      { text:"他挡在你身前时，眼里有种“必须救下谁”的执拗，你想知道他救过谁、又没救下谁。", type:"R", h:-2, v:2 },
+      { text:"他与满街灯火格格不入，像另一种人生，你好奇着他背后的故事。", type:"C", h:0, v:-2 },
+      { text:"他侧脸像你梦里反复出现的人，你几乎脱口叫出一个陌生名字。", type:"P", h:-2, v:-2 },
+      { text:"他替你解围后若即若离，只留下一句“别跟着我”，你反而更想追上去。", type:"A", h:2, v:0 }
+    ]},
+  { no:"第二幕 · 药堂守夜",
+    scene:"次日他发热倒在药堂门口。", ask:"你：",
+    options:[
+      { text:"守一夜，心想他若无人照顾太可怜，你愿意做那个人。", type:"R", h:-2, v:2 },
+      { text:"一边照顾一边忍不住问：“你昨晚为什么帮我？你是无意为之，还是蓄意而为？”", type:"D", h:2, v:2 },
+      { text:"先算清药钱和人情，以此作为后续和他交换的筹码。", type:"B", h:0, v:0 },
+      { text:"故意把药煎得很苦，看他皱眉，又偷偷在碗底放一颗蜜饯，享受掌控他甘苦的隐秘快乐。", type:"A", h:2, v:0 }
+    ]},
+  { no:"第三幕 · 半张旧案卷",
+    scene:"他昏迷之时，你发现他包袱里有半张旧案卷，牵涉十年前太医署冤案。", ask:"你：",
+    options:[
+      { text:"偷看后装作不知，心里却开始盘算着“帮他翻案”。", type:"R", h:-2, v:2 },
+      { text:"一边试探着问他，同时托人打听他的行踪和旧识。", type:"D", h:2, v:2 },
+      { text:"觉得他可能是个落难公子、被冤医官，他已经到了山穷水尽之时，需要你的帮助。", type:"P", h:-2, v:-2 },
+      { text:"坦诚告诉他你看到了，并问他这件事会不会牵扯到自己。", type:"B", h:0, v:0 }
+    ]},
+  { no:"第四幕 · 疫村之争",
+    scene:"你得知他身怀医术。一次江南大疫，你想跟着，但他不肯让你和他一起去疫村。", ask:"你：",
+    options:[
+      { text:"觉得他逞强又可怜，越拦你越要跟去，只有你能照顾他。", type:"R", h:-2, v:2 },
+      { text:"你反复问：“你是不是嫌我累赘？你以后还会不会突然消失？”", type:"D", h:2, v:2 },
+      { text:"你说“我们本来就不是一路人”，却被他一把握住手腕，气突然消了。", type:"C", h:0, v:-2 },
+      { text:"他冷你三天，第四天带一包你爱吃的酥糖，你明知是甜头还是答应不去。", type:"A", h:2, v:0 }
+    ]},
+  { no:"第五幕 · 忽冷忽热",
+    scene:"从疫村回来后他变得行踪不定，情绪也忽冷忽热。", ask:"你最容易：",
+    options:[
+      { text:"反复回想他哪句话变冷，想着是不是自己哪里没做好。", type:"D", h:2, v:2 },
+      { text:"开始在心里记账：我熬了几夜、垫了多少药钱，他凭什么这样。", type:"B", h:0, v:0 },
+      { text:"他越冷，你越觉得他身上那种危险和陌生感迷人，不想放手。", type:"C", h:0, v:-2 },
+      { text:"你把他沉默解释成“他心里有我但不敢爱”，并更心疼他。", type:"P", h:-2, v:-2 }
+    ]},
+  { no:"第六幕 · 她很像阿姐",
+    scene:"你无意听见他对友人醉语：“她很像阿姐。”", ask:"你：",
+    options:[
+      { text:"心口一凉，却想：那我就做那个能替他补上遗憾的人。", type:"R", h:-2, v:2 },
+      { text:"你追问阿姐是谁，越问越怕自己只是替身，却离不开。", type:"P", h:-2, v:-2 },
+      { text:"你当晚收拾行李，第二天又因为他一句“别走”留下。", type:"A", h:2, v:0 },
+      { text:"你冷静问他：“你需要的是我，还是我像她？我们能把话说清吗？”", type:"B", h:0, v:0 }
+    ]},
+  { no:"第七幕 · 三年之约",
+    scene:"他提出要离开洛州查案，可能三年不回。", ask:"你：",
+    options:[
+      { text:"说“我跟你去”，并开始替他准备行囊、打点关系。", type:"R", h:-2, v:2 },
+      { text:"你不说舍不得，只反复测试：“如果我不等你呢？”看他急不急。", type:"D", h:2, v:2 },
+      { text:"你说“你走吧”，然后偷偷雇车跟在后面。", type:"C", h:0, v:-2 },
+      { text:"你提出条件：每月一封信、查案进度共享、三年后何去何从写清楚。", type:"B", h:0, v:0 }
+    ]},
+  { no:"第八幕 · 只能救一个",
+    scene:"查案途中他被人围堵，你只能救一个：他，或能洗清他冤案的证人。", ask:"你：",
+    options:[
+      { text:"先救他，你做不到看他死在眼前，哪怕以后一起背罪。", type:"R", h:-2, v:2 },
+      { text:"你必须先反复确认：“你会不会怪我？”，再按他先前说的计划救证人。", type:"D", h:2, v:2 },
+      { text:"你快速盘算：救证人能换官府庇护，再回头救他。你把这笔账说清后，直接去救证人。", type:"B", h:0, v:0 },
+      { text:"你冲向他，因为他若死了，你心里那个背负着冤案的“理想的男主”也就死了。", type:"P", h:-2, v:-2 }
+    ]},
+  { no:"第九幕 · 线该断了",
+    scene:"冤案将被上呈天听，他随时会有危险，却说“我们该有个了断了”。", ask:"你：",
+    options:[
+      { text:"你想起他这些年的伤，觉得离开等于背叛，内疚让你留下。", type:"R", h:-2, v:2 },
+      { text:"你半夜给他写了封信，明知该断，却告诉他你只有一收到他消息就会去帮助他。", type:"A", h:2, v:0 },
+      { text:"你逼他给一个明确承诺。", type:"D", h:2, v:2 },
+      { text:"你承认你们的感情并不健康，选择远走。", type:"C", h:0, v:-2 }
+    ]},
+  { no:"第十幕 · 月老问线",
+    scene:"最后的那一页，你梦到月老问你：这根红线交给你，你打算怎么办？", ask:"",
+    options:[
+      { text:"你仍把线绕在他腕上，想：也许这次我们就不会那么坎坷。", type:"P", h:-2, v:-2 },
+      { text:"你把线打成活结：能靠近，也能松开，约定彼此可退。", type:"B", h:0, v:0 },
+      { text:"你把线剪断，却留一截在风里：你爱那种炽热，但不再用它证明自己。", type:"C", h:0, v:-2 },
+      { text:"你把线浸在酒里，往后岁月，只尝这段苦与乐的酣畅淋漓。", type:"A", h:2, v:0 }
+    ]}
+];
+
+/* ---------- 状态 ---------- */
+let order = [];            // order[q] = 该题选项的显示顺序索引
+let answers = [];          // answers[q] = 原始选项索引（相对 QUESTIONS[q].options）
+let cur = 0;               // 当前题目索引
+let soundOn = false;
+let audioCtx = null;
+let resultData = null;
+
+const letters = ["A","B","C","D"];
+
+function shuffle(a){
+  const arr = a.slice();
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function initOrder(){
+  order = QUESTIONS.map(q => shuffle(q.options.map((_,i)=>i)));
+  answers = new Array(QUESTIONS.length).fill(-1);
+}
+
+/* ---------- 页面切换 ---------- */
+function transition(cb){
+  const ink = document.getElementById("ink");
+  const rl = document.getElementById("redline");
+  ink.classList.remove("run"); rl.classList.remove("run");
+  void ink.offsetWidth; void rl.offsetWidth;
+  ink.classList.add("run"); rl.classList.add("run");
+  setTimeout(cb, 180);
+}
+
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0, behavior:"instant" in window ? "instant":"auto"});
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+
+function goto(id){
+  transition(()=> showPage(id));
+}
+
+/* ---------- 音效 ---------- */
+function toggleSound(){
+  soundOn = !soundOn;
+  const t = soundOn ? "音效 · 开" : "音效 · 关";
+  document.querySelectorAll(".sound-toggle").forEach(b=>{
+    b.textContent = t;
+    b.classList.toggle("on", soundOn);
+    b.setAttribute("aria-pressed", String(soundOn));
+  });
+}
+
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; }
+  }
+  return audioCtx;
+}
+
+function playStamp(){
+  if(!soundOn) return;
+  const ctx = ensureAudio(); if(!ctx) return;
+  const t = ctx.currentTime;
+  // 印章落纸：短促低音
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = "sine"; o.frequency.setValueAtTime(180, t);
+  o.frequency.exponentialRampToValueAtTime(90, t+0.12);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.5, t+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+0.18);
+  o.connect(g).connect(ctx.destination);
+  o.start(t); o.stop(t+0.2);
+}
+
+function playPage(){
+  if(!soundOn) return;
+  const ctx = ensureAudio(); if(!ctx) return;
+  const t = ctx.currentTime;
+  // 纸页轻响：柔和噪声
+  const len = Math.floor(ctx.sampleRate*0.22);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<len;i++){
+    const env = Math.sin(Math.PI*i/len);
+    d[i] = (Math.random()*2-1)*0.18*env;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const f = ctx.createBiquadFilter();
+  f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = 0.8;
+  src.connect(f).connect(ctx.destination);
+  src.start(t);
+}
+
+/* ---------- 题目渲染 ---------- */
+function renderLanterns(){
+  const wrap = document.getElementById("lanterns");
+  wrap.innerHTML = "";
+  for(let i=0;i<10;i++){
+    const s = document.createElement("span");
+    s.className = "lamp";
+    if(answers[i] >= 0) s.classList.add("done");
+    if(i === cur) s.classList.add("now");
+    wrap.appendChild(s);
+  }
+}
+
+function renderQuestion(){
+  const q = QUESTIONS[cur];
+  const box = document.getElementById("question");
+  renderLanterns();
+  const opts = order[cur].map(origIdx=>({ origIdx, data:q.options[origIdx] }));
+  box.innerHTML =
+    '<p class="scene-no">'+q.no+'</p>'+
+    '<p class="scene">'+q.scene+'</p>'+
+    (q.ask ? '<p class="ask">'+q.ask+'</p>' : '')+
+    '<div class="options">'+
+      opts.map((o,i)=>{
+        const chosen = answers[cur] === o.origIdx;
+        return '<button class="option'+(chosen?' selected':'')+'" data-orig="'+o.origIdx+'">'+
+          '<span class="seal">缘</span>'+
+          '<span class="tag">'+letters[i]+'.</span><span>'+o.data.text+'</span>'+
+        '</button>';
+      }).join("")+
+    '</div>';
+  document.getElementById("qCount").textContent = "第 "+(cur+1)+" / 10 幕";
+  document.querySelectorAll(".option").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const orig = parseInt(el.dataset.orig, 10);
+      choose(orig);
+    });
+  });
+}
+
+function choose(origIdx){
+  if(answers[cur] >= 0) return; // 防重复
+  answers[cur] = origIdx;
+  playStamp();
+  document.querySelectorAll(".option").forEach(el=>{
+    el.classList.remove("selected");
+    if(parseInt(el.dataset.orig,10) === origIdx) el.classList.add("selected");
+  });
+  renderLanterns();
+  setTimeout(()=>{
+    if(cur < 9){
+      cur++;
+      playPage();
+      transition(()=>renderQuestion());
+    } else {
+      gotoLoading();
+    }
+  }, 320);
+}
+
+/* ---------- 解线中 ---------- */
+const ROTOR = [
+  "第一结：你如何靠近一个人。",
+  "第二结：你如何面对冲突。",
+  "第三结：你如何系住，又如何松开。",
+  "判词将出，请稍候。"
+];
+
+function gotoLoading(){
+  showPage("page-loading");
+  const rotor = document.getElementById("lineRotor");
+  let i = 0;
+  rotor.textContent = ROTOR[0];
+  const timer = setInterval(()=>{
+    i++;
+    if(i < ROTOR.length){ rotor.textContent = ROTOR[i]; }
+  }, 620);
+  setTimeout(()=>{
+    clearInterval(timer);
+    computeResult();
+    transition(()=>{ renderResult(); showPage("page-result"); });
+  }, 2800);
+}
+
+/* ---------- 计分 ---------- */
+function computeResult(){
+  const counts = {};       // 每型出现总次数
+  const picked = {};       // 用户选中次数
+  let sumH = 0, sumV = 0;
+  QUESTIONS.forEach(q=>{
+    q.options.forEach(o=>{ counts[o.type] = (counts[o.type]||0)+1; });
+  });
+  answers.forEach((aIdx, qi)=>{
+    const o = QUESTIONS[qi].options[aIdx];
+    picked[o.type] = (picked[o.type]||0)+1;
+    sumH += o.h; sumV += o.v;
+  });
+  const std = Object.keys(TYPES).map(k=>({
+    key:k, score:(picked[k]||0)/(counts[k]||1)
+  })).sort((a,b)=> b.score - a.score);
+  const main = std[0], sub = std[1];
+  const avgH = sumH/10, avgV = sumV/10;
+
+  // 九宫格
+  const colH = avgH <= -0.8 ? -1 : (avgH >= 0.8 ? 1 : 0);
+  const colV = avgV <= -0.8 ? -1 : (avgV >= 0.8 ? 1 : 0);
+  const grid = [
+    [ "投射纠缠型",      "反差吸引型",      "混合：控制＋理想化" ],
+    [ "混合：融合＋现实", "互相补偿型",      "互相成瘾型" ],
+    [ "互相救赎型",      "混合：现实＋旧伤", "强依恋＋强防御" ]
+  ][colV+1][colH+1];
+
+  const hText = avgH <= -0.8 ? "你倾向用照顾、融合、拯救来维持关系。"
+    : avgH >= 0.8 ? "你倾向用控制、测试、防御、追逃来维持关系。"
+    : "你倾向交换、协商、看现实条件。";
+  const vText = avgV <= -0.8 ? "你容易被理想化、缺失补偿、心中影像吸引。"
+    : avgV >= 0.8 ? "你容易被旧伤重演、熟悉痛苦、强烈拉扯吸引。"
+    : "你容易被现实刺激、即时奖赏、条件匹配吸引。";
+
+  const nearTie = (std[0].score - std[1].score) < 0.08;
+
+  resultData = {
+    main: TYPES[main.key],
+    sub: TYPES[sub.key],
+    mainScore: main.score, subScore: sub.score,
+    avgH, avgV, grid, hText, vText, nearTie,
+    picked, counts
+  };
+}
+
+function splitVerdict(txt){
+  const parts = txt.split("。").map(s=>s.trim()).filter(Boolean);
+  if(parts.length >= 2){
+    return { head: parts[0]+"。", rest: parts.slice(1).map(s=>s+"。").join("") };
+  }
+  return { head: txt, rest: "" };
+}
+
+function motifSVG(key){
+  const c = "#B23A2E", g = "#C9A45C";
+  const map = {
+    R:'<path d="M60 34 C74 58 82 74 74 94 C70 104 58 106 52 98 C47 91 52 82 58 82 C66 82 72 92 72 94" fill="none" stroke="'+c+'" stroke-width="2.4" stroke-linecap="round"/><path d="M30 110 C54 96 78 96 102 108" fill="none" stroke="'+c+'" stroke-width="1.8" stroke-linecap="round"/>',
+    A:'<path d="M60 28 C76 40 84 58 80 76 C75 96 52 100 46 84 C42 74 50 68 58 72 C68 77 74 86 72 88" fill="none" stroke="'+c+'" stroke-width="2.4" stroke-linecap="round"/><path d="M42 106 C60 96 80 96 96 104" fill="none" stroke="'+g+'" stroke-width="1.8" stroke-linecap="round"/>',
+    D:'<circle cx="82" cy="50" r="24" fill="none" stroke="'+g+'" stroke-width="1.8"/><path d="M24 108 C42 90 60 88 78 96" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round"/><path d="M52 100 L82 50" fill="none" stroke="'+c+'" stroke-width="1.6" stroke-dasharray="4 4"/>',
+    C:'<path d="M52 30 C60 44 64 56 58 66 C54 74 44 74 42 66 C40 58 46 52 54 56" fill="none" stroke="'+c+'" stroke-width="2.4" stroke-linecap="round"/><path d="M40 106 C58 92 78 92 96 104" fill="none" stroke="'+c+'" stroke-width="1.8" stroke-linecap="round"/><circle cx="78" cy="34" r="3" fill="'+g+'"/>',
+    P:'<circle cx="52" cy="52" r="22" fill="none" stroke="'+g+'" stroke-width="1.8"/><circle cx="82" cy="78" r="18" fill="none" stroke="'+c+'" stroke-width="1.8" stroke-dasharray="3 3"/><path d="M30 104 C50 92 70 90 88 98" fill="none" stroke="'+c+'" stroke-width="1.8" stroke-linecap="round"/>',
+    B:'<path d="M40 46 L56 62 L40 78 L56 94 M78 40 L62 56 L78 72 L62 88" fill="none" stroke="'+c+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="56" cy="62" r="4" fill="'+g+'"/><circle cx="62" cy="56" r="4" fill="'+g+'"/>'
+  };
+  return '<svg class="type-motif" viewBox="0 0 120 120" width="130" height="130" aria-hidden="true">'+(map[key]||map.B)+'</svg>';
+}
+
+function renderResult(){
+  const r = resultData;
+  const sv = splitVerdict(r.main.verdict);
+  const subTxt = "你的副线是「"+r.sub.line+"」。平时它藏在主型后面；当你压力大、睡不好、被冷落时，最容易滑向这种模式。";
+  const mixedNote = r.nearTie
+    ? "你落在「混合线」：没有单一主型压倒其他。你更像在不同关系里切换策略。主型与副型很接近，说明你正在从旧模式松动，这是好事。"
+    : "";
+  const box = document.getElementById("result");
+  box.innerHTML =
+    '<div class="topbar"><span>结果判词</span>'+
+      '<button class="sound-toggle" id="soundToggle3" aria-pressed="'+(soundOn)+'">'+(soundOn?'音效 · 开':'音效 · 关')+'</button></div>'+
+    '<div class="verdict-scroll">'+
+      '<p class="kicker">你的错线判词</p>'+
+      '<p class="draw">你抽到：</p>'+
+      '<p class="line-name">「'+r.main.line+'」</p>'+
+      motifSVG(r.main.key)+
+      '<div class="verdict-lines">'+
+        '<p>'+sv.head+'</p>'+
+        (sv.rest ? sv.rest.split("。").filter(Boolean).map(s=>'<p>'+s+'。</p>').join("") : "")+
+      '</div>'+
+      '<div class="sub-line">'+subTxt+'</div>'+
+      '<div class="coord">'+
+        '<div class="row"><span class="key">你的坐标</span><span class="val">H = '+fmt(r.avgH)+'，V = '+fmt(r.avgV)+'</span></div>'+
+        '<div class="row"><span class="key">横向</span><span class="val">'+r.hText+'</span></div>'+
+        '<div class="row"><span class="key">纵向</span><span class="val">'+r.vText+'</span></div>'+
+      '</div>'+
+      '<div class="grid-box"><span class="label">九宫格位置</span><div class="name">你落在「'+r.grid+'」</div></div>'+
+      (mixedNote ? '<div class="sub-line" style="border-left-color:var(--gold);background:rgba(201,164,92,.08);">'+mixedNote+'</div>' : "")+
+      '<div class="mirror"><span class="label">文学镜像</span><span>'+r.main.mirror+'</span></div>'+
+      '<div class="advice"><span class="label">一线建议</span> '+r.main.advice+'</div>'+
+    '</div>'+
+    '<div class="result-cta">'+
+      '<button class="btn btn-primary" id="btnShare">保存判词</button>'+
+      '<button class="btn btn-ghost" id="btnRestart">再问一次</button>'+
+    '</div>'+
+    '<p class="disclaimer">错线司 · 十幕红线劫｜娱乐化自我探索，非心理诊断</p>';
+  document.getElementById("btnShare").addEventListener("click", ()=>{ fillShare(); goto("page-share"); });
+  document.getElementById("btnRestart").addEventListener("click", restart);
+  document.getElementById("soundToggle3").addEventListener("click", toggleSound);
+}
+
+function fmt(n){
+  const v = Math.round(n*10)/10;
+  return (v>0 ? "+" : "") + v.toFixed(1);
+}
+
+/* ---------- 分享卡 ---------- */
+function fillShare(){
+  const r = resultData;
+  document.getElementById("shareLine").textContent = "「"+r.main.line+"」";
+  document.getElementById("shareCoord").textContent = "H "+fmt(r.avgH)+" / V "+fmt(r.avgV);
+  document.getElementById("shareMirror").textContent = r.main.mirror;
+  document.getElementById("shareQuote").textContent = r.main.verdict;
+}
+
+function saveCard(){
+  const r = resultData;
+  const W = 720, H = 920;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const x = c.getContext("2d");
+  // 宣纸底
+  x.fillStyle = "#F6F1E7"; x.fillRect(0,0,W,H);
+  // 边框
+  x.strokeStyle = "#B23A2E"; x.lineWidth = 4;
+  x.strokeRect(28,28,W-56,H-56);
+  x.strokeStyle = "rgba(178,58,46,.35)"; x.lineWidth = 1;
+  x.strokeRect(42,42,W-84,H-84);
+  // 印章
+  const sx = W-130, sy = 52, sw = 66;
+  x.save();
+  x.translate(sx+sw/2, sy+sw/2); x.rotate(6*Math.PI/180);
+  x.strokeStyle = "#A93226"; x.lineWidth = 3;
+  x.strokeRect(-sw/2,-sw/2,sw,sw);
+  x.fillStyle = "#A93226"; x.font = "600 42px KaiTi, KaiTi, serif";
+  x.textAlign = "center"; x.textBaseline = "middle";
+  x.fillText("缘", 0, 2);
+  x.restore();
+
+  x.textAlign = "center";
+  x.fillStyle = "#8A8175"; x.font = "22px KaiTi, serif";
+  x.fillText("我的错线判词", W/2, 150);
+  x.fillStyle = "#2B2B2B"; x.font = "600 48px SimSun, serif";
+  x.fillText("「"+r.main.line+"」", W/2, 215);
+
+  // 分隔
+  x.strokeStyle = "rgba(138,129,117,.4)"; x.lineWidth = 1;
+  x.beginPath(); x.moveTo(90,255); x.lineTo(W-90,255); x.stroke();
+
+  x.textAlign = "left";
+  x.fillStyle = "#2B2B2B"; x.font = "28px SimSun, serif";
+  x.fillText("坐标  H "+fmt(r.avgH)+" / V "+fmt(r.avgV), 110, 310);
+  x.fillText("文学镜像  "+r.main.mirror, 110, 360);
+  x.fillText("九宫格  "+r.grid, 110, 410);
+
+  // 判词换行
+  x.fillStyle = "#3E5C5A"; x.font = "25px SimSun, serif";
+  const maxW = W-220;
+  const lines = wrapText(x, r.main.verdict, maxW);
+  let ly = 500;
+  lines.forEach(l=>{ x.fillText(l, 110, ly); ly += 46; });
+
+  // 建议
+  x.strokeStyle = "rgba(138,129,117,.4)";
+  x.beginPath(); x.moveTo(110, ly+10); x.lineTo(W-110, ly+10); x.stroke();
+  x.fillStyle = "#B23A2E"; x.font = "24px KaiTi, serif";
+  x.fillText("一线建议", 110, ly+62);
+  x.fillStyle = "#2B2B2B"; x.font = "24px SimSun, serif";
+  const advLines = wrapText(x, r.main.advice, maxW);
+  let ay = ly+112;
+  advLines.forEach(l=>{ x.fillText(l, 110, ay); ay += 42; });
+
+  x.textAlign = "center";
+  x.fillStyle = "#8A8175"; x.font = "20px KaiTi, serif";
+  x.fillText("错线司 · 十幕红线劫｜娱乐化自我探索", W/2, H-80);
+
+  c.toBlob(b=>{
+    if(!b) return;
+    const url = URL.createObjectURL(b);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "错线司判词-"+r.main.line+".png";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
+  }, "image/png");
+}
+
+function wrapText(ctx, text, maxWidth){
+  const chars = text.split("");
+  const lines = [];
+  let line = "";
+  for(let ch of chars){
+    const test = line + ch;
+    if(ctx.measureText(test).width > maxWidth && line){
+      lines.push(line); line = ch;
+    } else {
+      line = test;
+    }
+  }
+  if(line) lines.push(line);
+  return lines;
+}
+
+/* ---------- 重来 ---------- */
+function restart(){
+  initOrder();
+  cur = 0;
+  resultData = null;
+  goto("page-cover");
+}
+
+/* ---------- 绑定 ---------- */
+document.getElementById("btnStart").addEventListener("click", ()=>{ playPage(); goto("page-notice"); });
+document.getElementById("btnBegin").addEventListener("click", ()=>{
+  playPage();
+  cur = 0;
+  transition(()=>{ renderQuestion(); showPage("page-question"); });
+});
+document.getElementById("btnBackCover").addEventListener("click", ()=> goto("page-cover"));
+document.getElementById("btnPrev").addEventListener("click", ()=>{
+  if(cur > 0){ cur--; renderQuestion(); }
+  else { goto("page-notice"); }
+});
+document.getElementById("btnRestart2").addEventListener("click", restart);
+document.getElementById("btnBackResult").addEventListener("click", ()=> goto("page-result"));
+document.getElementById("btnSave").addEventListener("click", ()=>{ playStamp(); saveCard(); });
+document.querySelectorAll(".sound-toggle").forEach(b=> b.addEventListener("click", toggleSound));
+
+/* ---------- 启动 ---------- */
+initOrder();
+renderLanterns();
+</script>
+</body>
+</html>
